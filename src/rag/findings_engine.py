@@ -41,7 +41,8 @@ def match_findings(
     Args:
         observations: List of dicts from analyze_site_photo(), each with
             keys: filename, asset_category, findings (list of dicts with
-            finding/priority/confidence/notes).
+            finding/priority/confidence/notes), plus debug keys _parse_ok
+            and _raw_response (see src/vision/gemini_vision.py).
         pdf_text: Extracted PDF report text (currently informational only;
             not yet cross-matched — future enhancement).
 
