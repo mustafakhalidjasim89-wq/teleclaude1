@@ -1,0 +1,9 @@
+streamlit>=1.38
+anthropic>=0.40
+pypdf>=5.0
+pandas>=2.2
+openpyxl>=3.1
+XlsxWriter>=3.2
+python-dotenv>=1.0
+pydantic>=2.8
+SQLAlchemy>=2.0
