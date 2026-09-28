@@ -163,9 +163,16 @@ def _parse_model_json(text: str) -> Dict[str, Any]:
         if cleaned.lower().startswith("json"):
             cleaned = cleaned[4:]
     try:
-        return json.loads(cleaned)
+        result = json.loads(cleaned)
+        result["_parse_ok"] = True
+        return result
     except json.JSONDecodeError:
-        return {"asset_category": "Unclassified", "findings": [], "raw_response": text}
+        return {
+            "asset_category": "Unclassified",
+            "findings": [],
+            "_parse_ok": False,
+            "_raw_response": text,
+        }
 
 
 def _guess_media_type(filename: str) -> str:
@@ -237,4 +244,6 @@ def analyze_site_photo(photo_file) -> Dict[str, Any]:
         "filename": filename,
         "asset_category": parsed.get("asset_category", "Unclassified"),
         "findings": parsed.get("findings", []),
+        "_parse_ok": parsed.get("_parse_ok", False),
+        "_raw_response": parsed.get("_raw_response", response_text),
     }
