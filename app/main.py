@@ -44,6 +44,34 @@ with tab_upload:
                 findings = match_findings(observations, pdf_text)
             st.success(f"Analysis complete for site {site_id}: {len(findings)} findings.")
             st.session_state["last_findings"] = findings
+            st.session_state["last_observations"] = observations
+
+            # Surface a warning right away if any photo's response didn't
+            # parse as valid JSON — otherwise that silently looks identical
+            # to "no issues found", which is misleading.
+            parse_failures = [o for o in observations if not o.get("_parse_ok", False)]
+            if parse_failures:
+                names = ", ".join(o.get("filename", "unknown") for o in parse_failures)
+                st.warning(
+                    f"⚠️ {len(parse_failures)} photo(s) didn't return valid JSON from "
+                    f"Claude, so they show 0 findings by default rather than a real "
+                    f"result: {names}. Check the debug expander below or in the "
+                    f"Findings tab for the raw model response."
+                )
+
+    observations = st.session_state.get("last_observations", [])
+    if observations:
+        with st.expander("🔍 Debug: per-photo analysis details"):
+            for obs in observations:
+                ok = obs.get("_parse_ok", False)
+                icon = "✅" if ok else "❌"
+                st.markdown(
+                    f"**{icon} {obs.get('filename', 'unknown')}** — "
+                    f"asset category: `{obs.get('asset_category', 'Unclassified')}`, "
+                    f"findings: {len(obs.get('findings', []))}"
+                )
+                if not ok:
+                    st.code(obs.get("_raw_response", "(no response captured)"))
 
 with tab_findings:
     st.subheader("Findings")
@@ -54,7 +82,15 @@ with tab_findings:
             path = build_excel_report(findings)
             st.success(f"Report generated: {path}")
     else:
-        st.info("Run an audit analysis in the Upload tab to see findings here.")
+        observations = st.session_state.get("last_observations", [])
+        if observations:
+            st.info(
+                "No findings were extracted from the last run. Check the "
+                "'Debug: per-photo analysis details' expander in the Upload "
+                "tab to see what Claude actually returned for each photo."
+            )
+        else:
+            st.info("Run an audit analysis in the Upload tab to see findings here.")
 
 with tab_dashboard:
     st.subheader("Management Dashboard")
